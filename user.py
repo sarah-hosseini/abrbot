@@ -49,6 +49,4 @@ class User:
 
         df.loc[df['user_id'] == self.user_id, 'current_folder_id'] = current_folder_id
 
-        # df['current_folder_id'] = df['user_id'].apply(lambda user: current_folder_id if user == self.user_id else False)
-        
         df.to_csv('user_data.csv', index=False)

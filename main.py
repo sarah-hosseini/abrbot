@@ -38,12 +38,8 @@ async def go_back (msg):
         else:
             superfolder_id = temp.values[0]
 
-
-        # change the last directory in database here
         
         user.change_last_dir(current_folder_id= superfolder_id, df= users_df)
-
-        #  uncompleted code!!!!!!!!!!!!!!
 
         chosen_folder = Folder(superfolder_id, user.user_id, user.folders, user.saved_msgs)
         await chosen_folder.forward_msgs_inside(bot)
