@@ -42,3 +42,13 @@ class User:
 
     def find_users_folders(self, folders_df):
         return folders_df.loc[folders_df['user_id'] ==  self.user_id]
+
+
+    def change_last_dir(self, current_folder_id, df):
+        self.last_dir_id = current_folder_id
+
+        df.loc[df['user_id'] == self.user_id, 'current_folder_id'] = current_folder_id
+
+        # df['current_folder_id'] = df['user_id'].apply(lambda user: current_folder_id if user == self.user_id else False)
+        
+        df.to_csv('user_data.csv', index=False)

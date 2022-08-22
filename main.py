@@ -40,7 +40,8 @@ async def go_back (msg):
 
 
         # change the last directory in database here
-
+        
+        user.change_last_dir(current_folder_id= superfolder_id, df= users_df)
 
         #  uncompleted code!!!!!!!!!!!!!!
 
