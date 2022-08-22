@@ -1,6 +1,6 @@
 from telebot import types
 
-class folder:
+class Folder:
     
     def __init__(self, folder_id, user_id, folders_df, saved_msgs_df):
         self.user_id = user_id

@@ -1,34 +1,16 @@
-from ast import Lambda
-from operator import truediv
-from re import L
 from telebot.async_telebot import AsyncTeleBot
 import asyncio
 from secret import API_KEY
 import pandas as pd
 from telebot import types
-from folders import folder
+from folders import Folder
+from user import User
 
 bot = AsyncTeleBot(API_KEY)
 msg_df = pd.read_csv('saved_messages_data.csv')
 folders_df = pd.read_csv('folders.csv')
 users_df = pd.read_csv('user_data.csv')
 
-
-async def users_last_directory (msg):
-    last_dir_of_user = users_df.loc[users_df['user_id'] == msg.chat.id, 'current_folder_id']
-    if (last_dir_of_user.empty):
-        print('it''s a new user')
-        await welcome_new_user(msg)
-        return -1   # for when user is not in db 
-    return last_dir_of_user.values[0]
-
-async def welcome_new_user (msg):
-    markup = types.ReplyKeyboardMarkup(row_width=2)
-    btn1 = types.KeyboardButton("/help")
-    btn2 = types.KeyboardButton("/signup")
-    markup.add(btn1, btn2)
-
-    await bot.send_message(chat_id=msg.chat.id, text= "choose from menu:", reply_markup= markup)
 
 @bot.message_handler(commands= ['signup'])
 async def signup(msg):
@@ -38,25 +20,19 @@ async def signup(msg):
 async def show_menu(msg):
     print('id: ' + str(msg.id) + ', from: ' + str(msg.from_user.id) + ', content type: ' + msg.content_type)
 
-    last_directory = await users_last_directory(msg)
+    user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
 
-    if (last_directory != -1):
-        user_saved_msgs = msg_df.loc[msg_df['user_id'] ==  msg.chat.id]
-        user_folders = folders_df.loc[folders_df['user_id'] ==  msg.chat.id]
-
-        chosen_folder = folder(last_directory, msg.chat.id, user_folders, user_saved_msgs)
+    if await user.has_signed_up(bot):
+        chosen_folder = Folder(user.last_dir_id, user.user_id, user.folders, user.saved_msgs)
         await chosen_folder.forward_msgs_inside(bot)
 
 
 @bot.message_handler(commands= ['back'])
 async def go_back (msg):
-    last_directory = await users_last_directory(msg)
+    user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
 
-    if (last_directory != -1):
-        user_saved_msgs = msg_df.loc[msg_df['user_id'] ==  msg.chat.id]
-        user_folders = folders_df.loc[folders_df['user_id'] ==  msg.chat.id]
-
-        temp = user_folders.loc[user_folders['folder_id'] == last_directory, 'superfolder_id']
+    if await user.has_signed_up(bot):
+        temp = user.folders.loc[user.folders['folder_id'] == user.last_dir_id, 'superfolder_id']
         if (pd.isna(temp.values[0])):
             superfolder_id = 0
         else:
@@ -68,19 +44,16 @@ async def go_back (msg):
 
         #  uncompleted code!!!!!!!!!!!!!!
 
-        chosen_folder = folder(superfolder_id, msg.chat.id, user_folders, user_saved_msgs)
+        chosen_folder = Folder(superfolder_id, user.user_id, user.folders, user.saved_msgs)
         await chosen_folder.forward_msgs_inside(bot)
 
 
 @bot.message_handler(commands=['newfolder'])
 async def newfolder_maker(msg):
-    last_directory = await users_last_directory(msg)
+    user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
 
-    if (last_directory != -1):
-        user_saved_msgs = msg_df.loc[msg_df['user_id'] ==  msg.chat.id]
-        user_folders = folders_df.loc[folders_df['user_id'] ==  msg.chat.id]
-
-        temp = user_folders.loc[user_folders['folder_id'] == last_directory, 'folder_name']
+    if await user.has_signed_up(bot):
+        temp = user.folders.loc[user.folders['folder_id'] == user.last_dir_id, 'folder_name']
         folder_name = temp.values[0]
         btn1 = types.InlineKeyboardButton(text= 'yes', callback_data= 'makedir')
         btn2 = types.InlineKeyboardButton(text= 'no', callback_data= 'dontmakedir')
@@ -95,9 +68,6 @@ async def newfolder_maker(msg):
             await bot.edit_message_text(text='cool!', chat_id= msg.chat.id, message_id= call.message.id, reply_markup= None)
             pm = await bot.send_message(text='reply to this message with the folder name.', chat_id= msg.chat.id, reply_markup= types.ForceReply(input_field_placeholder= 'folder name? :)'))
         
-            print(pm.text)
-            
-            
 
             @bot.message_handler(func=lambda m: False if m.reply_to_message is None else m.reply_to_message.id == pm.id)
             async def get_foldername(m):
