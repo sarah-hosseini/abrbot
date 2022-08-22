@@ -98,7 +98,19 @@ async def newfolder_maker(msg):
             await bot.edit_message_text(text= 'got it!' , chat_id= msg.chat.id,
             message_id= call.message.id, reply_markup= None)
 
+@bot.message_handler(regexp= '(/).*')
+async def folder_opener(msg):
+    input = msg.text.split("/", 1)[1]
     
+    user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
+
+    if await user.has_signed_up(bot):
+        folder_id = Folder.find_folders_id(folder_name= input, user_current_folder= user.last_dir_id, folders_df= user.folders)
+
+        if folder_id is not None:
+            chosen_folder = Folder(folder_id, user.user_id, user.folders, user.saved_msgs)
+            await chosen_folder.forward_msgs_inside(bot)
+            user.change_last_dir(folder_id, users_df)
 
 
 # @bot.message_handler(content_types= ['text', 'file', 'audio', 'photo', 'voice', 'video', 'document', 

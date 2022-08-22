@@ -24,7 +24,7 @@ class Folder:
         subfolders = list(folders_df.loc[folders_df['superfolder_id'] == self.folder_id]['folder_id'])
         for i in subfolders:
             folder_name = folders_df.loc[folders_df['folder_id'] == i, 'folder_name'].values[0]
-            btn = types.KeyboardButton(folder_name)
+            btn = types.KeyboardButton('/' + folder_name)
             self.markup.add(btn)
         return subfolders
 
@@ -43,3 +43,12 @@ class Folder:
         await bot.send_message(chat_id=self.user_id, text= "choose from menu:", reply_markup= self.markup)
 
         
+    def find_folders_id(folder_name, user_current_folder, folders_df):
+        df = folders_df.loc[(folders_df['folder_name'] == folder_name) & (folders_df['superfolder_id'] == user_current_folder)]
+
+        if (df.empty):
+            print('inalid folder name')
+            return None
+        else:
+            print('found the folder...returning the id...')
+            return df.values[0][1]
