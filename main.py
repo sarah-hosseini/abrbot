@@ -1,3 +1,6 @@
+from ast import Lambda
+from operator import truediv
+from re import L
 from telebot.async_telebot import AsyncTeleBot
 import asyncio
 from secret import API_KEY
@@ -27,6 +30,9 @@ async def welcome_new_user (msg):
 
     await bot.send_message(chat_id=msg.chat.id, text= "choose from menu:", reply_markup= markup)
 
+@bot.message_handler(commands= ['signup'])
+async def signup(msg):
+    pass
 
 @bot.message_handler(commands=["start"])
 async def show_menu(msg):
@@ -87,31 +93,36 @@ async def newfolder_maker(msg):
         async def handle_makedir(call):
             print('yes')
             await bot.edit_message_text(text='cool!', chat_id= msg.chat.id, message_id= call.message.id, reply_markup= None)
-            msg = await bot.send_message(text='what would you like to name it?', chat_id= msg.chat.id, reply_markup= types.ForceReply(input_field_placeholder= 'folder name? :)'))
-            bot.register_next_step_handler(msg, get_foldername)
-         
+            pm = await bot.send_message(text='reply to this message with the folder name.', chat_id= msg.chat.id, reply_markup= types.ForceReply(input_field_placeholder= 'folder name? :)'))
+        
+            print(pm.text)
+            
+            
 
-        async def get_foldername(msg):
-            print(msg.content_type)
-            print('here')
-            b1 = types.InlineKeyboardButton(text= 'yes', callback_data= 'fname_is_accepted')
-            b2 = types.InlineKeyboardButton(text= 'no', callback_data= 'fname_not_accepted')
-            accept_name = types.InlineKeyboardMarkup(row_width= 2)
-            accept_name.add(b1, b2)
-            await bot.send_message(chat_id=msg.chat.id, text='name the folder ' + msg.text + '?',
-            reply_markup= accept_name, reply_to_message_id=msg.id)
+            @bot.message_handler(func=lambda m: False if m.reply_to_message is None else m.reply_to_message.id == pm.id)
+            async def get_foldername(m):
+                print('here in get folder name')
+                b1 = types.InlineKeyboardButton(text= 'yes', callback_data= 'fname_is_accepted')
+                b2 = types.InlineKeyboardButton(text= 'no', callback_data= 'fname_not_accepted')
+                accept_name = types.InlineKeyboardMarkup(row_width= 2)
+                accept_name.add(b1, b2)
+                
+                await bot.send_message(chat_id=m.chat.id, text='make a folder called ' + m.text + '?',
+                reply_markup= accept_name, reply_to_message_id=m.id)
 
-        @bot.callback_query_handler(func=lambda call: call.data == 'fname_is_accepted')
-        async def makedir(call):
-            print('yes do it')
-            await bot.edit_message_text(text='done!', chat_id= msg.chat.id, message_id= call.message.id,
-            reply_markup=None)
+            
+                @bot.callback_query_handler(func=lambda call: call.data == 'fname_is_accepted')
+                async def makedir(call):
+                    print('yes do it')
+                    await bot.edit_message_text(text='done!', chat_id= msg.chat.id, message_id= call.message.id,
+                    reply_markup=None)
+                    # makedir func
 
-        @bot.callback_query_handler(func=lambda call: call.data == 'fname_not_accepted')
-        async def abort_makedir(call):
-            print('no dont do it')
-            await bot.edit_message_text(text='ok!', chat_id= msg.chat.id, message_id= call.message.id,
-            reply_markup=None)    
+                @bot.callback_query_handler(func=lambda call: call.data == 'fname_not_accepted')
+                async def abort_makedir(call):
+                    print('no dont do it')
+                    await bot.edit_message_text(text='ok!', chat_id= msg.chat.id, message_id= call.message.id,
+                    reply_markup=None)    
 
 
         @bot.callback_query_handler(func=lambda call: call.data == 'dontmakedir')
@@ -124,10 +135,6 @@ async def newfolder_maker(msg):
 
 
 # @bot.message_handler(content_types= ['text', 'file', 'audio', 'photo', 'voice', 'video', 'document', 
-
-bot.enable_save_next_step_handlers(delay=2)
-
-bot.load_next_step_handlers()
 
 
 async def run():
