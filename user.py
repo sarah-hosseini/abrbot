@@ -1,4 +1,5 @@
 from telebot import types
+import pandas as pd
 
 class User:
     
@@ -50,3 +51,26 @@ class User:
         df.loc[df['user_id'] == self.user_id, 'current_folder_id'] = current_folder_id
 
         df.to_csv('user_data.csv', index=False)
+
+
+    def save_user_in_dataframe(user_id, users_df, folders_df):
+        
+        insert_user = {
+            "user_id": user_id,
+            "current_folder_id": 0,
+        }
+        users_df = pd.concat([users_df, pd.DataFrame([insert_user])])
+        
+        insert_folder = {
+            "user_id": user_id,
+            "folder_id": 0,
+            "folder_name":"main"
+        }
+        folders_df = pd.concat([folders_df, pd.DataFrame([insert_folder])])
+
+
+        # users_df = users_df.append({'user_id':user_id, 'current_folder_id':0}, ignore_index=True)
+        # folders_df = folders_df.append({'folder_id':0, 'user_id':user_id, 'folder_name':'main'})
+
+        users_df.to_csv('user_data.csv', index=False)
+        folders_df.to_csv('folders.csv', index=False)

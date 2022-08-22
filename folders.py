@@ -1,3 +1,4 @@
+import pandas as pd
 from telebot import types
 
 class Folder:
@@ -47,8 +48,38 @@ class Folder:
         df = folders_df.loc[(folders_df['folder_name'] == folder_name) & (folders_df['superfolder_id'] == user_current_folder)]
 
         if (df.empty):
-            print('inalid folder name')
+            print('invalid folder name')
             return None
         else:
             print('found the folder...returning the id...')
             return df.values[0][1]
+
+
+    def save_folder_in_dataframe(user_id, superfolder_id, folder_name, folders_df):
+        
+        temp = folders_df.loc[(folders_df['user_id'] == user_id), 'folder_id'].values
+        max_id = max(temp)
+
+        insert_folder = {
+            "user_id": user_id,
+            "folder_id": max_id + 1,
+            "folder_name":folder_name,
+            "superfolder_id": superfolder_id
+        }
+        folders_df = pd.concat([folders_df, pd.DataFrame([insert_folder])])
+
+        # folders_df = folders_df.append({'folder_id':max_id + 1, 'user_id':user_id, 'folder_name':folder_name, 'superfolder_id':superfolder_id})
+
+        folders_df.to_csv('folders.csv', index=False)
+
+
+    def save_msg_in_dataframe(user_id, folder_id, msg_id, msg_df):
+
+        insert_msg = {
+            "message_id":msg_id,
+            "user_id": user_id,
+            "folder_id": folder_id
+        }
+        msg_df = pd.concat([msg_df, pd.DataFrame([insert_msg])])
+
+        msg_df.to_csv('saved_messages_data.csv', index=False)
