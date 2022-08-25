@@ -73,6 +73,7 @@ class Folder:
         folders_df.to_csv('folders.csv', index=False)
 
 
+
     def save_msg_in_dataframe(user_id, folder_id, msg_id, msg_df):
 
         insert_msg = {
@@ -83,3 +84,23 @@ class Folder:
         msg_df = pd.concat([msg_df, pd.DataFrame([insert_msg])])
 
         msg_df.to_csv('saved_messages_data.csv', index=False)
+
+
+    def delete_msg_in_dataframe(user_id, folder_id, msg_id, msg_df):
+
+        msg_df.drop(msg_df[msg_df.message_id == msg_id].index, inplace=True)
+
+        msg_df.to_csv('saved_messages_data.csv', index=False)
+
+
+    def delete_folder_in_dataframe(user, folder_id, msg_df, folders_df, user_df):
+
+        folders_df.drop(folders_df[(folders_df.folder_id == folder_id) & (folders_df.user_id == user.user_id)].index, inplace=True)
+        msg_df.drop(msg_df[(msg_df.folder_id == folder_id) & (msg_df.user_id == user.user_id)].index, inplace=True)
+
+        if (user.last_dir_id == folder_id):
+            back_folder_id = user.find_superfolder_of_last_dir
+            user.change_last_dir(current_folder_id= back_folder_id, df= user_df)
+
+        msg_df.to_csv('saved_messages_data.csv', index=False)
+        folders_df.to_csv('folders.csv', index=False)

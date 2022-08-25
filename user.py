@@ -44,6 +44,16 @@ class User:
     def find_users_folders(self, folders_df):
         return folders_df.loc[folders_df['user_id'] ==  self.user_id]
 
+    def find_superfolder_of_last_dir(self):
+        print('let''s search for the current folder of user. it''s ')
+        print(self.last_dir_id)
+        temp = self.folders.loc[self.folders['folder_id'] == self.last_dir_id, 'superfolder_id']
+        if (pd.isna(temp.values[0])):
+            superfolder_id = 0
+        else:
+            superfolder_id = temp.values[0]
+        return superfolder_id
+
 
     def change_last_dir(self, current_folder_id, df):
         self.last_dir_id = current_folder_id
@@ -74,3 +84,15 @@ class User:
 
         users_df.to_csv('user_data.csv', index=False)
         folders_df.to_csv('folders.csv', index=False)
+
+
+    
+    def delete_user_in_dataframe(user, msg_df, folders_df, user_df):
+
+        user_df.drop(user_df[user_df.user_id == user.user_id].index, inplace=True)
+        folders_df.drop(folders_df[folders_df.user_id == user.user_id].index, inplace=True)
+        msg_df.drop(msg_df[msg_df.user_id == user.user_id].index, inplace=True)
+
+        msg_df.to_csv('saved_messages_data.csv', index=False)
+        folders_df.to_csv('folders.csv', index=False)
+        user_df.to_csv('user_data.csv', index=False)

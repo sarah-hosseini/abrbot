@@ -7,37 +7,35 @@ from folders import Folder
 from user import User
 
 bot = AsyncTeleBot(API_KEY)
-global msg_df
-global folders_df
-global users_df
 
-def load_info():
-    global msg_df
-    global folders_df
-    global users_df
-    msg_df = pd.read_csv('saved_messages_data.csv')
-    folders_df = pd.read_csv('folders.csv')
-    users_df = pd.read_csv('user_data.csv')
+msg_df = pd.read_csv('saved_messages_data.csv')
+folders_df = pd.read_csv('folders.csv')
+users_df = pd.read_csv('user_data.csv')
 
-def del_info():
-    global msg_df
-    global folders_df
-    global users_df
-    del msg_df
-    del folders_df 
-    del users_df 
+def load_msgs():
+    return pd.read_csv('saved_messages_data.csv')
+def load_folders():
+    return pd.read_csv('folders.csv')
+def load_usrs():
+    return pd.read_csv('user_data.csv')
 
 
 @bot.message_handler(commands= ['signup'])
 async def signup(msg):
-    load_info()
+    msg_df = load_msgs()
+    folders_df = load_folders()
+    users_df = load_usrs()
+
     await bot.send_message(chat_id= msg.chat.id, text= 'Happy to have you here\nplease send any message to store in your main folder or send /newfolder to make your space more organized!')
     User.save_user_in_dataframe(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df)
-    del_info()
+    
 
 @bot.message_handler(commands=["start"])
 async def show_menu(msg):
-    load_info()
+    msg_df = load_msgs()
+    folders_df = load_folders()
+    users_df = load_usrs()
+
     print('id: ' + str(msg.id) + ', from: ' + str(msg.from_user.id) + ', content type: ' + msg.content_type)
 
     user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
@@ -45,30 +43,32 @@ async def show_menu(msg):
     if await user.has_signed_up(bot):
         chosen_folder = Folder(user.last_dir_id, user.user_id, user.folders, user.saved_msgs)
         await chosen_folder.forward_msgs_inside(bot)
-    del_info()
+
 
 @bot.message_handler(commands= ['back'])
 async def go_back (msg):
-    load_info()
+    msg_df = load_msgs()
+    folders_df = load_folders()
+    users_df = load_usrs()
+
     user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
 
     if await user.has_signed_up(bot):
-        temp = user.folders.loc[user.folders['folder_id'] == user.last_dir_id, 'superfolder_id']
-        if (pd.isna(temp.values[0])):
-            superfolder_id = 0
-        else:
-            superfolder_id = temp.values[0]
-
+        superfolder_id = user.find_superfolder_of_last_dir()
         
         user.change_last_dir(current_folder_id= superfolder_id, df= users_df)
 
         chosen_folder = Folder(superfolder_id, user.user_id, user.folders, user.saved_msgs)
         await chosen_folder.forward_msgs_inside(bot)
-    del_info()
+
 
 @bot.message_handler(commands=['newfolder'])
 async def newfolder_maker(msg):
-    load_info()
+    msg_df = load_msgs()
+    folders_df = load_folders()
+    users_df = load_usrs()
+
+
     user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
 
     if await user.has_signed_up(bot):
@@ -106,12 +106,18 @@ async def newfolder_maker(msg):
                     await bot.edit_message_text(text='done!', chat_id= msg.chat.id, message_id= call.message.id,
                     reply_markup=None)
                     Folder.save_folder_in_dataframe(user.user_id, user.last_dir_id, m.text, folders_df)
+                    print(user.last_dir_id)
+                    open_folder = Folder(user.last_dir_id, user.user_id, user.folders, user.saved_msgs)
+                    await open_folder.forward_msgs_inside(bot)
+                    
 
                 @bot.callback_query_handler(func=lambda call: call.data == 'fname_not_accepted')
                 async def abort_makedir(call):
                     print('no dont do it')
                     await bot.edit_message_text(text='ok!', chat_id= msg.chat.id, message_id= call.message.id,
-                    reply_markup=None)    
+                    reply_markup=None)   
+                    open_folder = Folder(user.last_dir_id, user.user_id, user.folders, user.saved_msgs)
+                    await open_folder.forward_msgs_inside(bot) 
 
 
         @bot.callback_query_handler(func=lambda call: call.data == 'dontmakedir')
@@ -119,11 +125,34 @@ async def newfolder_maker(msg):
             print('nop')
             await bot.edit_message_text(text= 'got it!' , chat_id= msg.chat.id,
             message_id= call.message.id, reply_markup= None)
-    del_info()
+            open_folder = Folder(user.last_dir_id, user.user_id, user.folders, user.saved_msgs)
+            await open_folder.forward_msgs_inside(bot)
+
+
+@bot.message_handler(commands=['delete'], func=lambda m: False if m.reply_to_message is None else True)
+async def msg_deleter(msg):
+    msg_df = load_msgs()
+    folders_df = load_folders()
+    users_df = load_usrs()
+
+
+    user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
+
+    if await user.has_signed_up(bot):
+        
+        print(msg.reply_to_message)
+        # Folder.delete_msg_in_dataframe(user.user_id, )
+
+
+
 
 @bot.message_handler(regexp= '(/).*')
 async def folder_opener(msg):
-    load_info()
+    msg_df = load_msgs()
+    folders_df = load_folders()
+    users_df = load_usrs()
+
+
     input = msg.text.split("/", 1)[1]
     
     user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
@@ -135,11 +164,15 @@ async def folder_opener(msg):
             chosen_folder = Folder(folder_id, user.user_id, user.folders, user.saved_msgs)
             await chosen_folder.forward_msgs_inside(bot)
             user.change_last_dir(folder_id, users_df)
-    del_info()
 
-@bot.message_handler(func=lambda m: True if m.reply_to_message is None else m.reply_to_message.text != 'reply to this message with the folder name.', content_types= ['text', 'file', 'audio', 'photo', 'voice', 'video', 'document'])
+
+@bot.message_handler(func=lambda m: True if m.reply_to_message is None else m.reply_to_message.text != 'reply to this message with the folder name.', content_types= ['text', 'sticker', 'gif', 'file', 'audio', 'photo', 'voice', 'video', 'document'])
 async def save_message(msg):
-    load_info()
+    msg_df = load_msgs()
+    folders_df = load_folders()
+    users_df = load_usrs()
+
+
     print('save msg func')
     user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
     
@@ -163,8 +196,7 @@ async def save_message(msg):
         async def handle_dontsave(call):
             print('abort saving...')
             await bot.edit_message_text(text='save cancelled', chat_id= msg.chat.id, message_id= call.message.id, reply_markup= None)
-    del_info()
-
+    
 
 async def run():
     await bot.polling(non_stop=True)
