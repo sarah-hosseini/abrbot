@@ -14,6 +14,12 @@ folders_df = pd.read_csv('folders.csv')
 users_df = pd.read_csv('user_data.csv')
 
 
+cmd1 = types.BotCommand(command= 'signup', description= 'sign up to use abr robot')
+cmd2 = types.BotCommand(command= 'start', description= 'open the last directory you have viewed or view the main folder')
+cmd3 = types.BotCommand(command= 'back', description= 'go back one folder')
+cmd4= types.BotCommand(command= 'newfolder', description= 'create a new folder in current directory')
+cmd5 = types.BotCommand(command= 'delete', description= 'send this in reply to a saved message to delete it')
+cmds = [cmd1, cmd2, cmd3, cmd4, cmd5]
 
 @bot.message_handler(commands= ['signup'])
 async def signup(msg):
@@ -41,7 +47,7 @@ async def show_menu(msg):
     # msg_df = load_msgs()
     # folders_df = load_folders()
     # users_df = load_usrs()
-     
+    
     global msg_df
     global folders_df
     global users_df
@@ -127,7 +133,7 @@ async def newfolder_maker(msg):
                     global users_df
 
                     user = User(user_id= msg.chat.id, users_df= users_df, folders_df= folders_df, msg_df= msg_df)
-                    
+
                     print('yes do it')
                     await bot.edit_message_text(text='done!', chat_id= msg.chat.id, message_id= call.message.id,
                     reply_markup=None)
@@ -287,6 +293,9 @@ async def save_message(msg):
     
 
 async def run():
+    global cmds
+    global bot
+    await bot.set_my_commands(commands= cmds, scope= types.BotCommandScopeAllPrivateChats())
     await bot.polling(non_stop=True)
 
 
