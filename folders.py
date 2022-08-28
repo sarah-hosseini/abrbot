@@ -1,4 +1,3 @@
-from pickle import FALSE
 import pandas as pd
 from telebot import types
 

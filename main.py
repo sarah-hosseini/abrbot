@@ -1,4 +1,3 @@
-from glob import glob
 from telebot.async_telebot import AsyncTeleBot
 import asyncio
 from secret import API_KEY
@@ -23,10 +22,6 @@ cmds = [cmd1, cmd2, cmd3, cmd4, cmd5]
 
 @bot.message_handler(commands= ['signup'])
 async def signup(msg):
-    # msg_df = load_msgs()
-    # folders_df = load_folders()
-    # users_df = load_usrs()
-        
     global msg_df
     global folders_df
     global users_df
@@ -44,9 +39,6 @@ async def signup(msg):
 
 @bot.message_handler(commands=["start"])
 async def show_menu(msg):
-    # msg_df = load_msgs()
-    # folders_df = load_folders()
-    # users_df = load_usrs()
     
     global msg_df
     global folders_df
@@ -63,9 +55,6 @@ async def show_menu(msg):
 
 @bot.message_handler(commands= ['back'])
 async def go_back (msg):
-    # msg_df = load_msgs()
-    # folders_df = load_folders()
-    # users_df = load_usrs()
      
     global msg_df
     global folders_df
@@ -85,10 +74,6 @@ async def go_back (msg):
 
 @bot.message_handler(commands=['newfolder'])
 async def newfolder_maker(msg):
-    # msg_df = load_msgs()
-    # folders_df = load_folders()
-    # users_df = load_usrs()
-     
     global msg_df
     global folders_df
     global users_df
@@ -167,10 +152,6 @@ async def newfolder_maker(msg):
 
 @bot.message_handler(commands=['delete'], func=lambda m: False if m.reply_to_message is None else True)
 async def msg_deleter(msg):
-    # msg_df = load_msgs()
-    # folders_df = load_folders()
-    # users_df = load_usrs()
-
      
     global msg_df
     global folders_df
@@ -181,8 +162,6 @@ async def msg_deleter(msg):
 
     if await user.has_signed_up(bot):
         
-        # print(msg.reply_to_message)
-        # print(list(user.saved_msgs['message_id']))
 
         if (msg.reply_to_message.id in list(user.saved_msgs['message_id'])):
             print ('yes it is a saved one')
@@ -223,9 +202,6 @@ async def msg_deleter(msg):
 
 @bot.message_handler(regexp= '(/).*')
 async def folder_opener(msg):
-    # msg_df = load_msgs()
-    # folders_df = load_folders()
-    # users_df = load_usrs()
      
     global msg_df
     global folders_df
@@ -248,10 +224,6 @@ async def folder_opener(msg):
 @bot.message_handler(func=lambda m: True if m.reply_to_message is None else m.reply_to_message.text != 'reply to this message with the folder name.', content_types= ['text', 'sticker', 'gif', 'file', 'audio', 'photo', 
 'voice', 'video', 'document', 'animation'])
 async def save_message(msg):
-    # msg_df = load_msgs()
-    # folders_df = load_folders()
-    # users_df = load_usrs()
-     
     global msg_df
     global folders_df
     global users_df
