@@ -61,15 +61,21 @@ class User:
         df.loc[df['user_id'] == self.user_id, 'current_folder_id'] = current_folder_id
 
         df.to_csv('user_data.csv', index=False)
+        return df
 
 
-    def save_user_in_dataframe(user_id, users_df, folders_df):
+    def save_user_in_userdf(user_id, users_df):
         
         insert_user = {
             "user_id": user_id,
             "current_folder_id": 0,
         }
         users_df = pd.concat([users_df, pd.DataFrame([insert_user])])
+        
+        users_df.to_csv('user_data.csv', index=False)
+        return users_df
+
+    def save_user_in_folderdf(user_id, folders_df):
         
         insert_folder = {
             "user_id": user_id,
@@ -78,21 +84,28 @@ class User:
         }
         folders_df = pd.concat([folders_df, pd.DataFrame([insert_folder])])
 
-
-        # users_df = users_df.append({'user_id':user_id, 'current_folder_id':0}, ignore_index=True)
-        # folders_df = folders_df.append({'folder_id':0, 'user_id':user_id, 'folder_name':'main'})
-
-        users_df.to_csv('user_data.csv', index=False)
         folders_df.to_csv('folders.csv', index=False)
-
+        return folders_df
 
     
-    def delete_user_in_dataframe(user, msg_df, folders_df, user_df):
+    def delete_user_in_folderdf(user, folders_df):
+
+        folders_df.drop(folders_df[folders_df.user_id == user.user_id].index, inplace=True)
+        folders_df.to_csv('folders.csv', index=False)
+        return folders_df
+
+
+    def delete_user_in_userdf(user, user_df):
 
         user_df.drop(user_df[user_df.user_id == user.user_id].index, inplace=True)
-        folders_df.drop(folders_df[folders_df.user_id == user.user_id].index, inplace=True)
+
+        user_df.to_csv('user_data.csv', index=False)
+        return user_df
+
+
+    def delete_user_in_msgdf(user, msg_df):
+
         msg_df.drop(msg_df[msg_df.user_id == user.user_id].index, inplace=True)
 
         msg_df.to_csv('saved_messages_data.csv', index=False)
-        folders_df.to_csv('folders.csv', index=False)
-        user_df.to_csv('user_data.csv', index=False)
+        return msg_df
